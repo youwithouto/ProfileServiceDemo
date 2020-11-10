@@ -25,21 +25,36 @@ func NewRepository() (*Repository, error) {
 	return repository, nil
 }
 
+// Terminate terminates the existing DB connection
+func (r *Repository) Terminate() error {
+	sqlDB, err := r.db.DB()
+	if err != nil {
+		return err
+	}
+	return sqlDB.Close()
+}
+
 // CreateProfile takes a Profile instances and persists it to DB
 func (r *Repository) CreateProfile(p *model.Profile) (*model.Profile, error) {
-	r.db.Create(p)
+	result := r.db.Create(p)
+	if result.Error != nil {
+		return nil, result.Error
+	}
 	return p, nil
 }
 
 // UpdateProfile takes a Profile instance and updates an existing Profile instance
 func (r *Repository) UpdateProfile(p *model.Profile) (*model.Profile, error) {
-	r.db.Model(p).Updates(map[string]interface{}{
+	result := r.db.Model(p).Updates(map[string]interface{}{
 		"Name":        p.Name,
 		"Gender":      p.Gender,
 		"Dob":         p.Dob,
 		"Postcode":    p.Postcode,
 		"PhoneNumber": p.PhoneNumber,
 	})
+	if result.Error != nil {
+		return nil, result.Error
+	}
 	return p, nil
 }
 

@@ -76,5 +76,9 @@ func (s *Server) Run() {
 }
 
 func (s *Server) terminate() error {
-	return s.messageQueue.Terminate()
+	err := s.messageQueue.Terminate()
+	if err != nil {
+		return err
+	}
+	return s.repository.Terminate()
 }
