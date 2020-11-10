@@ -11,8 +11,9 @@ import (
 
 // Server defines the structure for a demo server instance
 type Server struct {
-	handler    *Handler
-	repository *Repository
+	handler      *Handler
+	repository   *Repository
+	messageQueue *MessageQueue
 }
 
 // NewServer creates a new instance of server
@@ -22,14 +23,20 @@ func NewServer() (*Server, error) {
 		return nil, err
 	}
 
-	handler, err := NewHandler(repository)
+	messageQueue, err := NewMessageQueue()
+	if err != nil {
+		return nil, err
+	}
+
+	handler, err := NewHandler(repository, messageQueue)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Server{
-		handler:    handler,
-		repository: repository,
+		handler:      handler,
+		repository:   repository,
+		messageQueue: messageQueue,
 	}, nil
 }
 
@@ -62,7 +69,12 @@ func (s *Server) Run() {
 	defer cancel()
 
 	srv.Shutdown(ctx)
+	s.terminate()
 
-	log.Println("shutting down")
+	log.Println("Server shutting down")
 	os.Exit(0)
+}
+
+func (s *Server) terminate() error {
+	return s.messageQueue.Terminate()
 }

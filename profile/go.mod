@@ -21,6 +21,7 @@ require (
 	github.com/prometheus/client_golang v1.8.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
+	github.com/streadway/amqp v1.0.0
 	github.com/twinj/uuid v1.0.0 // indirect
 	github.com/uber/jaeger-client-go v2.25.0+incompatible // indirect
 	github.com/uber/jaeger-lib v2.4.0+incompatible // indirect

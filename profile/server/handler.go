@@ -10,20 +10,24 @@ import (
 
 // Handler defines the structure for a Handler instnace
 type Handler struct {
-	router     *mux.Router
-	repository *Repository
+	router       *mux.Router
+	repository   *Repository
+	messageQueue *MessageQueue
 }
 
 // NewHandler creates a new instance for Handler
-func NewHandler(repository *Repository) (*Handler, error) {
+func NewHandler(repository *Repository, messageQueue *MessageQueue) (*Handler, error) {
 	handler := &Handler{
-		repository: repository,
+		repository:   repository,
+		messageQueue: messageQueue,
 	}
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", handler.HomeHandler).Methods("GET").Schemes("http")
-	r.HandleFunc("/profiles", handler.ProfilesHandler).Methods("GET", "POST", "PUT").
-		Schemes("http")
+	r.HandleFunc("/profiles", handler.GetProfilesHandler).Schemes("http").Methods("GET")
+	r.HandleFunc("/profiles", handler.PostProfileHandler).Schemes("http").Methods("POST")
+	r.HandleFunc("/profiles", handler.PutProfileHandler).Schemes("http").Methods("PUT")
+
 	http.Handle("/", r)
 	handler.router = r
 
@@ -35,22 +39,9 @@ func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Hello, World!\n"))
 }
 
-// ProfilesHandler defines an HTTP request handler for user profiles
-func (h *Handler) ProfilesHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		handleGetProfiles(h.repository, w, r)
-	case http.MethodPost:
-		handlePostProfile(h.repository, w, r)
-	case http.MethodPut:
-		handlePutProfile(h.repository, w, r)
-	default:
-		w.Write([]byte("This operation is not supported\n"))
-	}
-}
-
-func handleGetProfiles(repository *Repository, w http.ResponseWriter, r *http.Request) {
-	profiles, err := repository.GetAllProfile()
+// GetProfilesHandler defines an HTTP request handler for retriving user profiles
+func (h *Handler) GetProfilesHandler(w http.ResponseWriter, r *http.Request) {
+	profiles, err := h.repository.GetAllProfile()
 	if err != nil {
 		w.Write([]byte(err.Error()))
 	} else {
@@ -60,7 +51,8 @@ func handleGetProfiles(repository *Repository, w http.ResponseWriter, r *http.Re
 	}
 }
 
-func handlePostProfile(repository *Repository, w http.ResponseWriter, r *http.Request) {
+// PostProfileHandler defines an HTTP request handler for inserting user profiles
+func (h *Handler) PostProfileHandler(w http.ResponseWriter, r *http.Request) {
 	var request api.CreateProfileRequest
 
 	err := json.NewDecoder(r.Body).Decode(&request)
@@ -70,13 +62,17 @@ func handlePostProfile(repository *Repository, w http.ResponseWriter, r *http.Re
 	}
 
 	profile := request.ToModel()
-	repository.CreateProfile(&profile)
+	h.repository.CreateProfile(&profile)
+
+	h.messageQueue.Publish(GetDefaultQueueName(), api.GetCreatedProfileEvent(profile.ID))
+
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(profile)
 }
 
-func handlePutProfile(repository *Repository, w http.ResponseWriter, r *http.Request) {
+// PutProfileHandler defines an HTTP request handler for updating user profiles
+func (h *Handler) PutProfileHandler(w http.ResponseWriter, r *http.Request) {
 	var request api.UpdateProfileRequest
 
 	err := json.NewDecoder(r.Body).Decode(&request)
@@ -86,7 +82,10 @@ func handlePutProfile(repository *Repository, w http.ResponseWriter, r *http.Req
 	}
 
 	profile := request.ToModel()
-	repository.UpdateProfile(&profile)
+	h.repository.UpdateProfile(&profile)
+
+	h.messageQueue.Publish(GetDefaultQueueName(), api.GetUpdatedProfileEvent(profile.ID))
+
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(profile)
