@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -11,19 +12,20 @@ import (
 
 // Server defines the structure for a demo server instance
 type Server struct {
-	handler      *Handler
-	repository   *Repository
-	messageQueue *MessageQueue
+	handler       *Handler
+	repository    *Repository
+	messageQueue  *MessageQueue
+	configuration *Configuration
 }
 
 // NewServer creates a new instance of server
-func NewServer() (*Server, error) {
-	repository, err := NewRepository()
+func NewServer(configuration *Configuration) (*Server, error) {
+	repository, err := NewRepository(configuration)
 	if err != nil {
 		return nil, err
 	}
 
-	messageQueue, err := NewMessageQueue()
+	messageQueue, err := NewMessageQueue(configuration)
 	if err != nil {
 		return nil, err
 	}
@@ -34,16 +36,18 @@ func NewServer() (*Server, error) {
 	}
 
 	return &Server{
-		handler:      handler,
-		repository:   repository,
-		messageQueue: messageQueue,
+		handler:       handler,
+		repository:    repository,
+		messageQueue:  messageQueue,
+		configuration: configuration,
 	}, nil
 }
 
 // Run starts a new Server instance
 func (s *Server) Run() {
+	serverAddress := fmt.Sprintf("%s%d", "0.0.0.0:", s.configuration.ServerPort)
 	srv := &http.Server{
-		Addr: "0.0.0.0:8080",
+		Addr: serverAddress,
 		// Good practice to set timeouts to avoid Slowloris attacks.
 		WriteTimeout: time.Second * 15,
 		ReadTimeout:  time.Second * 15,

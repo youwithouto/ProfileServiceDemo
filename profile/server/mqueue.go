@@ -3,19 +3,23 @@ package server
 import (
 	"demo/profile/api"
 	"encoding/json"
+	"fmt"
 
 	"github.com/streadway/amqp"
 )
 
 // MessageQueue defines the structure of a MessageQueue instance
 type MessageQueue struct {
-	connection *amqp.Connection
-	channel    *amqp.Channel
+	connection    *amqp.Connection
+	channel       *amqp.Channel
+	configuration *Configuration
 }
 
 // NewMessageQueue creates a new instance for NewMessageQueue
-func NewMessageQueue() (*MessageQueue, error) {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+func NewMessageQueue(configuration *Configuration) (*MessageQueue, error) {
+	// "amqp://guest:guest@localhost:5672/"
+	connectionString := fmt.Sprintf("amqp://%s:%s@%s:%d/", configuration.MQUser, configuration.MQPassword, configuration.MQHost, configuration.MQPort)
+	conn, err := amqp.Dial(connectionString)
 	if err != nil {
 		return nil, err
 	}
@@ -26,8 +30,9 @@ func NewMessageQueue() (*MessageQueue, error) {
 	}
 
 	return &MessageQueue{
-		connection: conn,
-		channel:    ch,
+		connection:    conn,
+		channel:       ch,
+		configuration: configuration,
 	}, nil
 }
 

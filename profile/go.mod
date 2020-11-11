@@ -6,6 +6,7 @@ require (
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/jackc/pgx/v4 v4.9.2 // indirect
+	github.com/kelseyhightower/envconfig v1.4.0 // indirect
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/streadway/amqp v1.0.0

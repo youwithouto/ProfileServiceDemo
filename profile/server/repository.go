@@ -2,6 +2,7 @@ package server
 
 import (
 	"demo/profile/model"
+	"fmt"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -9,13 +10,17 @@ import (
 
 // Repository defines the structure for a database repository instance
 type Repository struct {
-	db *gorm.DB
+	db            *gorm.DB
+	configuration *Configuration
 }
 
 // NewRepository creates a new instance of Repository
-func NewRepository() (*Repository, error) {
-	dsn := "host=localhost user=you password=yoursecretpassword dbname=demo port=5432 sslmode=disable"
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+func NewRepository(configuration *Configuration) (*Repository, error) {
+	// "host=localhost user=you password=yoursecretpassword dbname=demo port=5432 sslmode=disable"
+	connectionString := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%d sslmode=disable",
+		configuration.DBHost, configuration.DBUser, configuration.DBPassword, configuration.DBName, configuration.DBPort)
+	db, err := gorm.Open(postgres.Open(connectionString), &gorm.Config{})
 
 	if err != nil {
 		return nil, err
