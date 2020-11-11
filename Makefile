@@ -1,6 +1,8 @@
+.PHONY: postgres-build
 postgres-build:
 	docker build -t demo/profile-db -f ./docker/Dockerfile.docker-postgres ./docker/
 
+.PHONY: postgres-up
 postgres-up:
 	docker run \
 	-d \
@@ -11,9 +13,11 @@ postgres-up:
 	-e POSTGRES_DB=demo \
 	demo/profile-db
 
+.PHONY: rabbitmq-build
 rabbitmq-build:
 	docker build -t demo/profile-mq -f ./docker/Dockerfile.docker-rabbitmq ./docker/
 
+.PHONY: rabbitmq-up
 rabbitmq-up:
 	docker run \
 	-d \

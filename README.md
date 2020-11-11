@@ -40,6 +40,16 @@ To start the Profile API service as a Docker process
 - Run `make build`
 - Run `make run` (assuming the server is running on port `8080`)
 
+To start the Profile API service with all dependencies
+- Navigate to the project root directory `.`
+- Run `make postgres-build` to build the Docker image for PostgreSQL
+- Run `make rabbitmq-build` to build the Docker image for RabbitMQ
+- Navigate to the `./profile` directory
+- Run `make api-network-up` to create a user-defined bridge in Docker
+- Run `make api-rabbitmq-up` to start a container for RabbitMQ
+- Run `make api-postgres-up` to start a container for PostgreSQL
+- Run `make api-profile-up` to start the Profile API service
+
 ### Start the Profile UI
 
 To start the Profile API service from source:
