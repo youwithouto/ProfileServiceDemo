@@ -6,77 +6,80 @@ The detailed requirements are given in: [doc/requirement_original.md](doc/requir
 
 ## Components
 
-### Service
+This repository contains two executable components:
+- Profile API service (`./profile`)
+- Profile UI (`./profile-ui`)
 
-- Create new profiles
-- Update existing profiles
-- List existing profiles
+and other related materials:
+- The original requirements doc (`./doc`)
+- Docker files for PostgreSQL and RabbitMQ (`./docker`)
 
-- Profile data validation
+The Profile API service can be run as a standalone service and [default values](profile/server/config.go) will be used for its configuration.
+Configuration of the Profile API service can be done using [environment variables](profile/server/config.go), and the following environment variables are supported:
+- `SERVER_PORT`
+- `DB_HOST`
+- `DB_PORT`
+- `DB_USER`
+- `DB_PASSWORD`
+- `DB_NAME`
+- `MQ_HOST`
+- `MQ_PORT`
+- `MQ_USER`
+- `MQ_PASSWORD`
+
+The Profile API Service assumes the PostgreSQL DB and RabbitMQ to be available, otherwise the API server will exit.
+
+### Start the service
+
+To start the Profile API service from source:
+- Navigate to the `./profile` directory
+- Run `go run main.go`
+
+To start the Profile API service as a Docker process
+- Navigate to the `./profile` directory
+- Run `make build`
+- Run `make run` (assuming the server is running on port `8080`)
+
+### Start the Profile UI
+
+To start the Profile API service from source:
+- Navigate to the `./profile-ui` directory
+- Run `npm start` (assuming the Profile API service is running on `loccalhost:8080`)
+
+
+## Implementation of the requirements
 
 ### Web API
 
-- Allow HTTP access from client applications
-  - Create
-  - Update
-  - List
+- The List, Create, and Update HTTP endpoints are implemented using `gorilla/mux`
+- Create and Update request payload validation is implemented using `go-playground/validator`
 
 ### Web UI
 
-- A simple user interface to manage the profiles in React function components wtih hooks
-  - Create
-  - Update
-  - List
-
-### Service API
+- The Profile UI is implemented using `React`
+- Local state management is done using `redux-thunk`
+- Profile API is access via `axios`
 
 ### DB
 
-- Postgres
-
-- Schema: profile-service
-- Table: profile
-- Fields:
-  - Name
-  - Gender
-  - DoB
-  - Postcode
-  - Phone number
-- Constraints
+- PostgreSQL database schema is available in `./profile/database/profile.create.sql`
 
 ### Events
 
-- Event design
-
-- Communicate with other services when a profile is created or updated
-- RabbitMQ
 
 ### Containers
 
-- A Docker file for the service that expose the web API endpoints
-- Run a container with the web API, the database and the message broker in it
-
-### Codebase/Versioning/Documentation
-
-- Github
-- README
-  - Instructions
-  - Thoughts
-
+- Docker file for the Profile API service is given in `./profile/Dockerfile`
 
 ---
 
 ### Time
 
-By looking at the challenge specification, my first impression is that completing everything listed will definitely take more than 6 hours for me as I have to set everything up from scratch on my local development environment and I need to have a look at how RabbitMQ works as this will be my first time using it. 
+By looking at the challenge specification, my first impression is that completing everything listed will definitely take more than 6 hours for me as I need to set everything up from scratch on my local development environment and I need to have a look at how RabbitMQ works as this will be my first time using it. 
 
 Most of the time will be spent on setting things up rather than coding the solution. 
 
-### Tasks not listed but needed
-
-- Library selection
-  - Database connection library
-  - Logging library
+The actual amount of time taken is around 8 hours.
 
 ### Assumptions
 
@@ -97,17 +100,19 @@ Most of the time will be spent on setting things up rather than coding the solut
   - There is no need to oordinate the error handling with user interfaces
     - I.e., design error code and use error code to convey the semantics of errors from server to the clients
 
-- Only basic logging is required
-  - For production logging, `uber/zap` might be a better option
+## Going further
 
+This initial implementation touched all elements required in the requirements doc, however, all those functions are implemented in the simplest form. Should there be any further implementation, the focus will be on the robustness of the Profile API service and the Profile UI.
 
-## How to run it
+- HTTP API error modeling
+  - Currently, error messages are sent to the UI as `application/text` which is hard for the UI to parse and render.
+  - Proper error code and error message should be defined and modeled as JSON object for the communication.
 
-- Start the infrastructure
+- HTTP API retry logic
+  - Currently, on the Profile UI, one user action trigger ones API request, depending on the actual requirement, certain retry logic can be implemented to provide better user experience.
 
-- Start the service
+- Service connection retry logic
+  - Currently, the connection from the Profile API server to the PostgreSQL DB and RabbitMQ is a one-time connection. If the single connection failed, the Profile API server will exit immediately without reestablishing the connections.
+  - The reconnection logic should be implemented for robust server logic
 
-- Start the web user interface
-
-## Possible Improvements
-
+- And more...
