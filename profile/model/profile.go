@@ -6,12 +6,12 @@ import (
 
 // Profile defines the structure for a Profile instance
 type Profile struct {
-	ID          int       `gorm:"primaryKey;column:ID"`
-	Name        string    `gorm:"column:Name"`
-	Gender      string    `gorm:"column:Gender"`
-	Dob         time.Time `gorm:"column:Dob"`
-	Postcode    int       `gorm:"column:Postcode"`
-	PhoneNumber string    `gorm:"column:PhoneNumber"`
+	ID          int       `gorm:"primaryKey;column:ID" json:"id"`
+	Name        string    `gorm:"column:Name" json:"name"`
+	Gender      string    `gorm:"column:Gender" json:"gender"`
+	Dob         time.Time `gorm:"column:Dob" json:"dob"`
+	Postcode    int       `gorm:"column:Postcode" json:"postcode"`
+	PhoneNumber string    `gorm:"column:PhoneNumber" json:"phoneNumber"`
 }
 
 // TableName defines the valid <schema name>.<table name> for gorm

@@ -61,7 +61,7 @@ func (r *Repository) UpdateProfile(p *model.Profile) (*model.Profile, error) {
 // GetAllProfile returns all available Profiles in DB
 func (r *Repository) GetAllProfile() (*[]model.Profile, error) {
 	profiles := []model.Profile{}
-	result := r.db.Find(&profiles)
+	result := r.db.Order("\"ID\"").Find(&profiles)
 	if result.Error != nil {
 		return &profiles, result.Error
 	}

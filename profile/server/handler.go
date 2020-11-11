@@ -22,14 +22,17 @@ func NewHandler(repository *Repository, messageQueue *MessageQueue) (*Handler, e
 		messageQueue: messageQueue,
 	}
 
-	r := mux.NewRouter()
-	r.HandleFunc("/", handler.HomeHandler).Methods("GET").Schemes("http")
-	r.HandleFunc("/profiles", handler.GetProfilesHandler).Schemes("http").Methods("GET")
-	r.HandleFunc("/profiles", handler.PostProfileHandler).Schemes("http").Methods("POST")
-	r.HandleFunc("/profiles", handler.PutProfileHandler).Schemes("http").Methods("PUT")
+	router := mux.NewRouter()
 
-	http.Handle("/", r)
-	handler.router = r
+	router.HandleFunc("/", handler.HomeHandler).Schemes("http").Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/profiles", handler.GetProfilesHandler).Schemes("http").Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/profiles", handler.PostProfileHandler).Schemes("http").Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/profiles", handler.PutProfileHandler).Schemes("http").Methods(http.MethodPut, http.MethodOptions)
+
+	router.Use(mux.CORSMethodMiddleware(router))
+
+	http.Handle("/", router)
+	handler.router = router
 
 	return handler, nil
 }
@@ -41,6 +44,12 @@ func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
 
 // GetProfilesHandler defines an HTTP request handler for retriving user profiles
 func (h *Handler) GetProfilesHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	if r.Method == http.MethodOptions {
+		return
+	}
+
 	profiles, err := h.repository.GetAllProfile()
 	if err != nil {
 		w.Write([]byte(err.Error()))
@@ -53,10 +62,20 @@ func (h *Handler) GetProfilesHandler(w http.ResponseWriter, r *http.Request) {
 
 // PostProfileHandler defines an HTTP request handler for inserting user profiles
 func (h *Handler) PostProfileHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	if r.Method == http.MethodOptions {
+		return
+	}
+
 	var request api.CreateProfileRequest
 
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err = request.Validate(); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -73,10 +92,20 @@ func (h *Handler) PostProfileHandler(w http.ResponseWriter, r *http.Request) {
 
 // PutProfileHandler defines an HTTP request handler for updating user profiles
 func (h *Handler) PutProfileHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	if r.Method == http.MethodOptions {
+		return
+	}
+
 	var request api.UpdateProfileRequest
 
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err = request.Validate(); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -87,6 +116,6 @@ func (h *Handler) PutProfileHandler(w http.ResponseWriter, r *http.Request) {
 	h.messageQueue.Publish(GetDefaultQueueName(), api.GetUpdatedProfileEvent(profile.ID))
 
 	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(profile)
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"demo/profile/server"
 	"flag"
+	"log"
 	"os"
 	"time"
 )
@@ -14,6 +15,7 @@ func main() {
 
 	server, err := server.NewServer()
 	if err != nil {
+		log.Fatal(err)
 		os.Exit(1)
 	}
 	server.Run()
