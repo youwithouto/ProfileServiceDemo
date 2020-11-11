@@ -1,5 +1,5 @@
 import React from 'react';
-import ProfileList from './ProfileList';
+import ProfileList from './components/ProfileList';
 
 function App() {
     return (

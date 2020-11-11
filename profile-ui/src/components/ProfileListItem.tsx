@@ -3,6 +3,9 @@ import { makeStyles } from '@material-ui/core/styles';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import { format, parse } from 'date-fns';
 import React from 'react';
+import { connect } from 'react-redux';
+import { updateProfile } from '../actionCreators/profileActionCreators';
+import { Profile, UpdateProfileRequest } from '../store/types/profile';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -28,15 +31,6 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-interface ProfileItem {
-    id: number;
-    name: string;
-    gender: string;
-    dob: string;
-    postcode: number;
-    phoneNumber: string;
-}
-
 enum ProfileListItemFieldName {
     NameField = 1,
     GenderField,
@@ -44,15 +38,21 @@ enum ProfileListItemFieldName {
     PhoneNumberField,
 }
 
-function ProfileListItem(props: ProfileItem) {
+interface PropsType {
+    profile: Profile;
+    updateProfile: (profile: UpdateProfileRequest) => void;
+}
+
+function ProfileListItem(props: PropsType) {
     const classes = useStyles();
-    const { id, name, gender, dob, postcode, phoneNumber } = props;
+    const { profile, updateProfile } = props;
+    const { id, name, gender, dob, postcode, phoneNumber } = profile;
 
     const [updatedName, setNameValue] = React.useState(name);
     const [updatedGender, setGenderValue] = React.useState(gender);
     const [updatedDob, setUpdatedDob] = React.useState(new Date(dob));
-    const [updatedPostcode, setPostcodeValue] = React.useState(postcode)
-    const [updatedPhoneNumber, setPhoneNumberValue] = React.useState(phoneNumber)
+    const [updatedPostcode, setPostcodeValue] = React.useState(postcode);
+    const [updatedPhoneNumber, setPhoneNumberValue] = React.useState(phoneNumber);
 
     const handleFieldChange = (fieldName: ProfileListItemFieldName) => (event) => {
         const value = event.target.value;
@@ -73,13 +73,23 @@ function ProfileListItem(props: ProfileItem) {
             default:
             // pass
         }
-    }
+    };
 
     const handleDateChange = (event) => {
         const dateString = event.target.value;
         const date = parse(dateString, 'yyyy-MM-dd', new Date());
-        console.info(date);
         setUpdatedDob(new Date(date));
+    };
+
+    const handleUpdateClick = () => {
+        updateProfile({
+            id: id,
+            name: updatedName,
+            gender: updatedGender,
+            dob: updatedDob,
+            postcode: updatedPostcode,
+            phoneNumber: updatedPhoneNumber
+        });
     };
 
     return (
@@ -95,17 +105,19 @@ function ProfileListItem(props: ProfileItem) {
                     </div>
                 </AccordionSummary>
                 <AccordionDetails className={classes.details}>
-                    <TextField
-                        id="standard-basic"
-                        label="Name"
-                        value={updatedName}
-                        onChange={handleFieldChange(ProfileListItemFieldName.NameField)}
-                    />
                     <FormControl className={classes.formControl}>
-                        <InputLabel id="demo-simple-select-label">Gender</InputLabel>
+                        <TextField
+                            id="demo-profile-name-input-label"
+                            label="Name"
+                            value={updatedName}
+                            onChange={handleFieldChange(ProfileListItemFieldName.NameField)}
+                        />
+                    </FormControl>
+                    <FormControl className={classes.formControl}>
+                        <InputLabel id="demo-profile-gender-select-label">Gender</InputLabel>
                         <Select
-                            labelId="demo-simple-select-label"
-                            id="demo-simple-select"
+                            labelId="demo-profile-gender-select-label"
+                            id="demo-profile-gender-select"
                             value={updatedGender}
                             onChange={handleFieldChange(ProfileListItemFieldName.GenderField)}
                         >
@@ -113,34 +125,40 @@ function ProfileListItem(props: ProfileItem) {
                             <MenuItem value={'m'}>Male</MenuItem>
                         </Select>
                     </FormControl>
-                    <TextField
-                        id="date"
-                        label="Date of Birth"
-                        type="date"
-                        className={classes.textField}
-                        InputLabelProps={{
-                            shrink: true,
-                        }}
-                        value={format(new Date(updatedDob), 'yyyy-MM-dd')}
-                        onChange={handleDateChange}
-                    />
-                    <TextField
-                        id="standard-basic"
-                        label="Postcode"
-                        value={updatedPostcode}
-                        onChange={handleFieldChange(ProfileListItemFieldName.PostcodeField)}
-                    />
-                    <TextField
-                        id="standard-basic"
-                        label="Phone Number"
-                        value={updatedPhoneNumber}
-                        onChange={handleFieldChange(ProfileListItemFieldName.PhoneNumberField)}
-                    />
+                    <FormControl className={classes.formControl}>
+                        <TextField
+                            id="demo-profile-dob-select-label"
+                            label="Date of Birth"
+                            type="date"
+                            className={classes.textField}
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                            value={format(new Date(updatedDob), 'yyyy-MM-dd')}
+                            onChange={handleDateChange}
+                        />
+                    </FormControl>
+                    <FormControl className={classes.formControl}>
+                        <TextField
+                            id="demo-profile-postcode-input-label"
+                            label="Postcode"
+                            value={updatedPostcode}
+                            onChange={handleFieldChange(ProfileListItemFieldName.PostcodeField)}
+                        />
+                    </FormControl>
+                    <FormControl className={classes.formControl}>
+                        <TextField
+                            id="demo-profile-phonenumber-code-label"
+                            label="Phone Number"
+                            value={updatedPhoneNumber}
+                            onChange={handleFieldChange(ProfileListItemFieldName.PhoneNumberField)}
+                        />
+                    </FormControl>
                 </AccordionDetails>
                 <Divider />
                 <AccordionActions>
                     <Button size="small">Cancel</Button>
-                    <Button size="small" color="primary">
+                    <Button size="small" color="primary" onClick={handleUpdateClick}>
                         Update
                     </Button>
                 </AccordionActions>
@@ -149,4 +167,15 @@ function ProfileListItem(props: ProfileItem) {
     );
 }
 
-export default ProfileListItem;
+const mapStateToProps = (state) => {
+    return {};
+};
+
+const mapDispatchToProps = {
+    updateProfile
+};
+
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(ProfileListItem);
